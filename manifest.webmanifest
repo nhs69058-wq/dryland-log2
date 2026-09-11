@@ -1,0 +1,17 @@
+{
+  "name": "Dryland Log",
+  "short_name": "Dryland",
+  "description": "수영 선수를 위한 웨이트(드라이랜드) 트레이닝 기록",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B1216",
+  "theme_color": "#0B1216",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
