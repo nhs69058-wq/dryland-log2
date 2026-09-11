@@ -79,7 +79,7 @@ function renderEditor(ctx) {
   const tail = kind === 'routine'
     ? `<button class="btn btn-danger btn-block" data-act="rt-delete">이 루틴 삭제</button>`
     : `<label class="f">메모<textarea data-input="note" placeholder="스트랩 사용, 컨디션, 수영 연계 메모 등">${esc(obj.note)}</textarea></label>
-       <button class="btn btn-danger btn-block" data-act="discard">${kind === 'active' ? '이 운동 취소' : '이 기록 삭제'}</button>`;
+       <button class="btn btn-danger btn-block" data-act="discard">${kind === 'active' ? '이 운동 취소' : '이 기록 휴지통으로 이동'}</button>`;
 
   return `<div class="sess-top">${head}</div>
     <div class="page" style="padding-top:14px">${meta}<div class="stack" style="gap:14px">${body}</div>

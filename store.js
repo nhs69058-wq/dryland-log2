@@ -1,5 +1,6 @@
 // 데이터 저장과 계산 (폰의 localStorage에 저장)
-const KEY = 'dryland.v1';
+const KEY = 'dryland.v1';   // 저장소 이름 (바꾸면 기록이 안 보이니 그대로 두기)
+const APP_VERSION = 'v3';   // 더보기 화면에 표시 · sw.js의 VERSION과 같이 올리기
 const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 const CAT = { lower: '하체', pull: '당기기', push: '밀기', power: '파워·점프', core: '코어·어깨' };
 const MODES = {

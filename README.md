@@ -11,9 +11,8 @@
    - Repository name: `dryland-log`
    - **Public** 선택 → **Create repository**
 3. 만들어진 화면에서 **uploading an existing file** 링크를 누릅니다.
-4. 이 폴더(`dryland-log`) **안의 파일과 폴더를 전부** 끌어다 놓습니다.
-   - `index.html`, `seed.js`, `sw.js`, `manifest.webmanifest`, `README.md`, `js` 폴더, `icons` 폴더
-   - 폴더 자체가 아니라 폴더 **안의 내용물**을 올려야 합니다.
+4. zip을 풀면 나오는 **파일 16개를 전부 선택**(Ctrl+A)해서 끌어다 놓습니다.
+   - 폴더 없이 파일만 있습니다. 전부 한 곳에 올리면 됩니다.
 5. 아래 **Commit changes** 를 누릅니다.
 6. 저장소의 **Settings** → 왼쪽 **Pages**
    - Source: **Deploy from a branch**
@@ -58,9 +57,13 @@
 폰을 바꾸면 새 폰에서 **백업 파일 불러오기**로 옮깁니다.
 
 ## 4. 앱을 수정해서 다시 올릴 때
-1. GitHub 저장소에 바뀐 파일을 다시 업로드합니다.
-2. `sw.js` 맨 위 `VERSION` 숫자를 올립니다 (예: `dryland-v1` → `dryland-v2`).
-3. 폰에서 앱을 **두 번** 껐다 켜면 새 버전이 적용됩니다. 기록은 그대로 유지됩니다.
+1. 코드를 고쳤다면 `sw.js`의 `VERSION`과 `store.js`의 `APP_VERSION`을 함께 올립니다 (예: `dryland-v3`/`v3` → `dryland-v4`/`v4`).
+   - 이 값은 앱 내부의 버전 이름이고, 앱 주소와는 관계없습니다.
+2. GitHub 저장소 첫 화면에서 **Add file → Upload files** → 파일 16개를 전부 선택해 끌어다 놓기 → 아래 **Commit changes**.
+   - 같은 이름의 파일은 새 파일로 덮어써집니다.
+3. **10분쯤** 기다린 뒤 폰에서 앱을 엽니다 (GitHub가 파일을 약 10분간 캐시합니다).
+   - 새 버전이 준비되면 앱이 한 번 저절로 새로고침됩니다. 운동 중이면 **지금 적용** 버튼이 뜹니다.
+4. **더보기** 맨 아래 **앱 버전**으로 적용됐는지 확인합니다. 기록은 그대로 유지됩니다.
 
 ## 5. 엑셀 일지를 옮기면서 해석한 부분
 확인이 필요한 부분이 있으면 앱에서 **기록 → 수정**으로 고칠 수 있습니다.

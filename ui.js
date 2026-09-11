@@ -150,7 +150,7 @@ async function notifyRest(body) {
   if (!S.settings.notify || !('Notification' in window) || Notification.permission !== 'granted' || !navigator.serviceWorker) return;
   try {
     const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(r, 1500))]);
-    if (reg) reg.showNotification('휴식 끝', { body, tag: 'rest', renotify: true, vibrate: [300, 120, 300, 120, 500], icon: 'icons/icon-192.png' });
+    if (reg) reg.showNotification('휴식 끝', { body, tag: 'rest', renotify: true, vibrate: [300, 120, 300, 120, 500], icon: 'icon-192.png' });
   } catch (e) { /* 알림 실패는 무시 */ }
 }
 const wake = {

@@ -171,7 +171,7 @@ function sessionDetail(id) {
     }).join('') || '<div class="empty-state">종목 기록이 없습니다</div>'}</div>
     <div class="stack" style="gap:8px">
       <div class="row"><button class="btn grow" data-a="edit">수정</button><button class="btn btn-primary grow" data-a="again">이 운동 다시 하기</button></div>
-      <div class="row"><button class="btn grow" data-a="routine">루틴으로 저장</button><button class="btn grow btn-danger" data-a="del">삭제</button></div>
+      <div class="row"><button class="btn grow" data-a="routine">루틴으로 저장</button><button class="btn grow btn-danger" data-a="del">휴지통으로 이동</button></div>
     </div>`, { tall: s.items.length > 3 });
   sh.el.addEventListener('click', async (e) => {
     const a = e.target.closest('[data-a]');
@@ -203,7 +203,7 @@ function swimSheet(s) {
     <div class="stack" style="gap:6px"><div class="small ink2">컨디션 (1 나쁨 ~ 5 최고)</div>
       <div class="seg">${[1, 2, 3, 4, 5].map((n) => `<button class="${cond === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}</div></div>
     <label class="f">메모<textarea name="note" rows="2">${esc(d.note)}</textarea></label>
-    <div class="row">${isNew ? '<button class="btn grow" data-a="x">취소</button>' : '<button class="btn grow btn-danger" data-a="del">삭제</button>'}
+    <div class="row">${isNew ? '<button class="btn grow" data-a="x">취소</button>' : '<button class="btn grow btn-danger" data-a="del">휴지통으로 이동</button>'}
       <button class="btn btn-primary grow" data-a="ok">저장</button></div>`);
   const f = (n) => sh.el.querySelector(`[name="${n}"]`).value.trim();
   sh.el.addEventListener('click', async (e) => {

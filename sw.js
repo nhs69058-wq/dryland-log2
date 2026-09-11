@@ -1,27 +1,32 @@
 // Dryland Log service worker — 오프라인 실행용 캐시
-// 앱 파일을 수정해서 다시 올릴 때는 VERSION 숫자를 올려주세요.
-const VERSION = 'dryland-v2';
+// 앱 파일을 수정해서 다시 올릴 때는 이 VERSION과 store.js의 APP_VERSION을 같이 올려주세요.
+const VERSION = 'dryland-v3';
 const SHELL = [
   './',
   './index.html',
   './seed.js',
-  './js/store.js',
-  './js/ui.js',
-  './js/editor.js',
-  './js/editor-actions.js',
-  './js/views.js',
-  './js/more.js',
-  './js/main.js',
+  './store.js',
+  './ui.js',
+  './editor.js',
+  './editor-actions.js',
+  './views.js',
+  './more.js',
+  './main.js',
   './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/maskable-512.png',
-  './icons/apple-touch-icon.png',
+  './icon-192.png',
+  './icon-512.png',
+  './maskable-512.png',
+  './apple-touch-icon.png',
 ];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' — 폰 브라우저에 남아 있는 옛 파일이 아니라 서버의 최신 파일로 새 캐시를 채움
+  e.waitUntil(
+    caches.open(VERSION)
+      .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -48,11 +53,11 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // 앱 파일: 캐시로 즉시 열고, 뒤에서 최신 버전을 받아둠 (다음 실행 때 반영)
+  // 앱 파일: 캐시로 즉시 열고(오프라인 가능), 뒤에서 서버에 바뀐 게 있는지 확인해 캐시를 갱신
   e.respondWith(
     caches.open(VERSION).then((c) =>
       c.match(req, { ignoreSearch: true }).then((hit) => {
-        const net = fetch(req)
+        const net = fetch(req.url, { cache: 'no-cache' })
           .then((res) => { if (res.ok) c.put(req, res.clone()); return res; })
           .catch(() => hit);
         return hit || net;

@@ -40,6 +40,7 @@ function renderMore() {
       ${deferredInstall ? '<button class="btn btn-primary btn-block" data-act="install">홈 화면에 앱 설치</button>'
         : '<div class="card small ink2">크롬 메뉴(⋮) → <b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누르면 주소창 없이 앱처럼 열립니다. 이미 설치했다면 그대로 쓰시면 됩니다.</div>'}
       <button class="btn btn-block btn-danger" data-act="reset">모든 기록 지우고 처음 상태로</button>
+      <div class="small muted" style="text-align:center">앱 버전 ${APP_VERSION}</div>
     </div></section>
   </div>`;
 }

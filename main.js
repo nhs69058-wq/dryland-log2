@@ -52,5 +52,22 @@ setInterval(() => {
   if (el && a && a.start) el.textContent = fmtDur(Date.now() - a.start);
 }, 250);
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    // 백그라운드에서 다시 열 때도 새 버전이 있는지 확인 (10분에 한 번)
+    let lastCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || Date.now() - lastCheck < 10 * 60000) return;
+      lastCheck = Date.now();
+      reg.update().catch(() => {});
+    });
+  }).catch(() => {});
+  // 새 버전이 설치되면 바로 적용: 운동 중이거나 창이 열려 있으면 버튼으로 물어봄
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;
+    if (!activeSession() && !layers.length) location.reload();
+    else toast('새 버전이 준비됐습니다', { label: '지금 적용', fn: () => location.reload() });
+  });
+}
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
