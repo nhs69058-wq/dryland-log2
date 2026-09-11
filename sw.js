@@ -1,6 +1,6 @@
 // Dryland Log service worker — 오프라인 실행용 캐시
 // 앱 파일을 수정해서 다시 올릴 때는 VERSION 숫자를 올려주세요.
-const VERSION = 'dryland-v1';
+const VERSION = 'dryland-v2';
 const SHELL = [
   './',
   './index.html',
