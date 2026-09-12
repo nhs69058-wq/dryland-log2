@@ -16,7 +16,7 @@ function swimText(s) {
   return [w.dist ? `${w.dist}m` : '', w.time || '', w.detail || '', s.note].filter(Boolean).join(' · ') || '수영';
 }
 function sessRow(s) {
-  const txt = s.type === 'swim' ? swimText(s) : (s.items.map((it) => exById(it.ex).name).join(', ') || s.note || '메모만 있음');
+  const txt = s.type === 'swim' ? swimText(s) : (s.items.map((it) => exPrimary(exById(it.ex))).join(', ') || s.note || '메모만 있음');
   const sets = s.type === 'weight' ? sessionStats(s).sets : 0;
   return `<button class="list-btn" data-act="detail" data-id="${s.id}">
     <div class="grow" style="min-width:0">
@@ -30,7 +30,7 @@ function goalsHtml() {
     const p = goalProgress(g), ex = p.ex;
     const unit = ex.mode === 'time' ? '초' : 'kg';
     return `<div class="card stack" style="gap:8px">
-      <div class="row"><b class="grow ellipsis">${esc(ex.name)}</b>${p.achieved ? `<span class="badge pr">달성 ${fmtDate(p.achieved)}</span>` : ''}</div>
+      <div class="row"><b class="grow ellipsis">${esc(exPrimary(ex))}</b>${p.achieved ? `<span class="badge pr">달성 ${fmtDate(p.achieved)}</span>` : ''}</div>
       <div class="row small ink2"><span class="grow">목표 <b class="num" style="font-size:17px;color:var(--ink)">${fmtW(ex, g.w)}${unit} × ${g.r}${g.sets > 1 ? ` × ${g.sets}세트` : ''}</b></span>
         <span>최고 ${p.best == null ? '—' : `<b class="num" style="font-size:17px;color:var(--ink)">${fmtW(ex, p.best)}${unit}</b>`} (${g.r}회 이상)</span></div>
       <div class="meter ${p.achieved ? 'done' : ''}"><i style="width:${Math.round(p.pct * 100)}%"></i></div>
@@ -46,7 +46,7 @@ function renderHome() {
   const recent = doneSessions().slice(0, 3);
   return `<div class="top"><div class="wordmark">DRYLAND<small>수영을 위한 웨이트 기록</small></div><div class="ink2">${fmtDate(today())}</div></div>
   <div class="page">
-    ${!S.checkins[today()] ? `<button class="banner" data-act="checkin" style="text-align:left;color:var(--ink)"><span class="grow">오늘 컨디션을 기록해보세요 (수면 · 몸 상태 · 의욕)</span><b style="color:var(--acc)">기록</b></button>` : ''}
+    ${!S.checkins[today()] ? `<button class="banner accent" data-act="checkin"><span class="grow">오늘 컨디션을 기록해보세요 (수면 · 몸 상태 · 의욕)</span><b>기록</b></button>` : ''}
     ${(bd == null || bd >= 14) && S.sessions.length ? `<div class="banner"><span class="grow">기록은 이 폰에만 저장됩니다. 마지막 백업: ${bd == null ? '없음' : bd + '일 전'}</span><button class="btn btn-sm" data-act="backup">백업</button></div>` : ''}
     <div class="stack">
       <button class="btn btn-primary btn-block" data-act="start-empty" style="min-height:58px;font-size:17px">운동 시작</button>
@@ -61,7 +61,7 @@ function renderHome() {
     <section><div class="sec-h"><h2>루틴</h2><button data-act="routines">관리</button></div>
       <div class="stack">${S.routines.length ? S.routines.map((r) => `<div class="list-btn" style="padding:0">
         <button class="grow" data-act="rt-start" data-id="${r.id}" style="text-align:left;padding:14px;min-width:0"><b>${esc(r.name)}</b>
-          <div class="small ink2 ellipsis">${r.items.map((it) => exById(it.ex).name).join(', ')}</div></button>
+          <div class="small ink2 ellipsis">${r.items.map((it) => exPrimary(exById(it.ex))).join(', ')}</div></button>
         <button class="btn btn-sm" data-act="rt-edit" data-id="${r.id}" style="margin-right:10px">편집</button></div>`).join('')
       : '<div class="card small ink2">운동을 마친 뒤 기록 상세에서 “루틴으로 저장”을 누르면 여기에 생깁니다.</div>'}</div>
     </section>
@@ -122,7 +122,7 @@ function renderHistory() {
     </div>
     <section><div class="sec-h"><h2>${ui.calSel ? fmtDate(ui.calSel) : `${m}월 기록`}</h2>${ui.calSel ? '<button data-act="cal-all">이 달 전체</button>' : ''}</div>
       <div class="stack">
-        ${selEv ? `<div class="card row"><span class="badge" style="background:rgba(255,91,79,.18);color:#FF9A91">대회</span><b>${esc(selEv.name)}</b></div>` : ''}
+        ${selEv ? `<div class="card row"><span class="badge" style="background:rgba(var(--clock-rgb),.18);color:var(--clock)">대회</span><b>${esc(selEv.name)}</b></div>` : ''}
         ${ui.calSel ? checkinRow(ui.calSel) : ''}
         ${list.map(sessRow).join('') || `<div class="empty-state">기록이 없습니다${ui.calSel ? `<br><button class="btn btn-sm" data-act="log-past" data-d="${ui.calSel}" style="margin-top:10px">이 날짜에 웨이트 기록 추가</button>` : ''}</div>`}
       </div></section>
@@ -169,11 +169,11 @@ function sessionDetail(id) {
       <div class="tile"><div class="l">볼륨</div><div class="v">${st.vol.toLocaleString()}</div><div class="d">kg</div></div>
       <div class="tile"><div class="l">${dur ? '운동 시간' : '개인 기록'}</div><div class="v">${dur || prs.length}</div><div class="d">${dur ? '' : '개'}</div></div>
     </div>
-    ${prs.length ? `<div class="row wrap">${prs.map((p) => `<span class="badge pr">PR ${esc(p.ex.name)} ${p.val}</span>`).join('')}</div>` : ''}
+    ${prs.length ? `<div class="row wrap">${prs.map((p) => `<span class="badge pr">PR ${esc(exPrimary(p.ex))} ${p.val}</span>`).join('')}</div>` : ''}
     ${s.note ? `<div class="ex-note" style="margin:0">${esc(s.note)}</div>` : ''}
     <div>${s.items.map((it) => {
       const ex = exById(it.ex);
-      return `<div class="detail-ex"><div><b>${esc(ex.name)}</b> ${it.g ? '<span class="badge">슈퍼세트</span>' : ''}<div class="small muted">${esc(ex.ko)}</div></div>
+      return `<div class="detail-ex"><div><b>${esc(exPrimary(ex))}</b> ${it.g ? '<span class="badge">슈퍼세트</span>' : ''}<div class="small muted">${esc(exSecondary(ex))}</div></div>
         ${it.note ? `<div class="small ink2">${esc(it.note)}</div>` : ''}
         ${it.sets.length ? `<div class="detail-sets">${it.sets.map((x) => `<span class="${x.wu ? 'wu' : ''}">${x.wu ? 'W ' : ''}${fmtSet(ex, x)}</span>`).join('')}</div>` : ''}</div>`;
     }).join('') || '<div class="empty-state">종목 기록이 없습니다</div>'}</div>
@@ -261,14 +261,14 @@ function renderProgress() {
   }
   const fmtY = (v) => (M === 'vol' || M === 'total' ? Math.round(v).toLocaleString() + (M === 'vol' ? 'kg' : unitR) : M === 'reps' ? num(v) + unitR : fmtW(ex, v) + 'kg');
   postRender = () => { mountChart($('#chart'), points, fmtY); mountChart($('#cond-chart'), condPts, (v) => num(v)); };
-  const chips = ids.slice(0, 8).map((id) => `<button class="chip ${id === ex.id ? 'on' : ''}" data-act="prog-ex" data-id="${id}">${esc(exById(id).name)}</button>`).join('');
+  const chips = ids.slice(0, 8).map((id) => `<button class="chip ${id === ex.id ? 'on' : ''}" data-act="prog-ex" data-id="${id}">${esc(exPrimary(exById(id)))}</button>`).join('');
   const tile = (l, b, fmt) => `<div class="tile"><div class="l">${l}</div><div class="v">${b ? fmt(b.v) : '—'}</div><div class="d">${b ? fmtDate(b.d) : ''}</div></div>`;
   const tiles = w
     ? tile('최고 무게', bestW, (v) => fmtW(ex, v)) + tile('추정 1RM', bestE, (v) => fmtW(ex, Math.round(v * 10) / 10)) + `<div class="tile"><div class="l">기록한 날</div><div class="v">${hist.length}</div><div class="d">회</div></div>`
     : tile(`최다 ${unitR === '초' ? '시간' : '횟수'}`, bestR, num) + `<div class="tile"><div class="l">기록한 날</div><div class="v">${hist.length}</div><div class="d">회</div></div><div class="tile"><div class="l">마지막</div><div class="v" style="font-size:20px">${hist.length ? fmtDate(hist[hist.length - 1].date) : '—'}</div></div>`;
   return `${head}<div class="page">${condSection}
     <div class="stack" style="gap:8px"><div class="chips">${chips}</div>
-      <button class="btn btn-block" data-act="prog-pick" style="justify-content:space-between"><span class="ellipsis"><b>${esc(ex.name)}</b> <span class="small muted">${esc(ex.ko)}</span></span>${ICON.down}</button></div>
+      <button class="btn btn-block" data-act="prog-pick" style="justify-content:space-between"><span class="ellipsis"><b>${esc(exPrimary(ex))}</b> <span class="small muted">${esc(exSecondary(ex))}</span></span>${ICON.down}</button></div>
     ${ex.mode === 'added' && !S.settings.bw ? '<button class="banner" data-act="set-bw" style="text-align:left;color:var(--ink)"><span class="grow">몸무게를 입력하면 추가 중량 종목의 추정 1RM을 몸무게까지 포함해 계산합니다</span><b>입력</b></button>' : ''}
     <div class="seg">${metrics.map(([k, l]) => `<button class="${k === M ? 'on' : ''}" data-act="prog-metric" data-m="${k}">${l}</button>`).join('')}</div>
     <div class="chart" id="chart"></div>

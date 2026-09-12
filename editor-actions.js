@@ -18,7 +18,7 @@ ACTS.setmenu = (b) => {
   const c = edCtx(), it = findItem(c, b.dataset.item);
   if (!it) return;
   const i = +b.dataset.i, s = it.sets[i];
-  menuSheet(`${exById(it.ex).name} · ${s.wu ? '워밍업' : '세트'}`, [
+  menuSheet(`${exPrimary(exById(it.ex))} · ${s.wu ? '워밍업' : '세트'}`, [
     { label: s.wu ? '일반 세트로 바꾸기' : '워밍업 세트로 표시', sub: '워밍업은 볼륨과 개인 기록 계산에서 빠집니다', fn: () => { s.wu = !s.wu; save(); render(); } },
     { label: '이 세트 복제', fn: () => { it.sets.splice(i + 1, 0, { ...s, done: c.kind === 'edit' }); save(); render(); } },
     { label: '이 세트 삭제', danger: true, fn: () => { if (kp && kp.itemId === it.id) closeKeypad(); it.sets.splice(i, 1); save(); render(); } },
@@ -78,7 +78,7 @@ ACTS.exmenu = (b) => {
   const ex = exById(it.ex), items = c.obj.items, next = items[items.indexOf(it) + 1];
   const opts = [{ label: it.note ? '메모 수정' : '메모 추가', sub: '스트랩, 그립, 속도, 체감 난이도 등', fn: () => noteSheet(it) }];
   if (it.g) opts.push({ label: '슈퍼세트에서 빼기', fn: () => ungroup(items, it) });
-  else if (next) opts.push({ label: '아래 종목과 슈퍼세트로 묶기', sub: `${ex.name} + ${exById(next.ex).name}`, fn: () => { it.g = next.g || uid(); next.g = it.g; save(); render(); } });
+  else if (next) opts.push({ label: '아래 종목과 슈퍼세트로 묶기', sub: `${exPrimary(ex)} + ${exPrimary(exById(next.ex))}`, fn: () => { it.g = next.g || uid(); next.g = it.g; save(); render(); } });
   opts.push({ label: '위로 이동', fn: () => moveBlock(items, it, -1) }, { label: '아래로 이동', fn: () => moveBlock(items, it, 1) });
   if (c.kind !== 'routine') opts.push({ label: '지난 기록 · 그래프 보기', fn: () => {
     if (kp) closeKeypad();
@@ -95,11 +95,11 @@ ACTS.exmenu = (b) => {
     fixGroups(items);
     save(); render();
   } });
-  menuSheet(ex.name, opts);
+  menuSheet(exPrimary(ex), opts);
 };
 function noteSheet(it) {
   const tags = ['스트랩 사용', '빠르게 (speed)', 'Easy', 'Hard', '오버그립', '언더그립', '뉴트럴 그립', '점프와 함께'];
-  const sh = openSheet(`<h3>메모 · ${esc(exById(it.ex).name)}</h3>
+  const sh = openSheet(`<h3>메모 · ${esc(exPrimary(exById(it.ex)))}</h3>
     <div class="chips" style="flex-wrap:wrap">${tags.map((t) => `<button class="chip" data-t="${t}">${t}</button>`).join('')}</div>
     <textarea rows="3">${esc(it.note)}</textarea>
     <div class="row"><button class="btn grow" data-a="x">취소</button><button class="btn btn-primary grow" data-a="ok">저장</button></div>`);
@@ -136,7 +136,7 @@ function pickExercises(onDone, single) {
       const ls = last ? last.item.sets.filter((s) => s.done) : [];
       const lt = ls.length ? ` · ${fmtDate(last.session.date)} ${fmtSet(e, ls[ls.length - 1])}` : '';
       return `<button class="pick ${on ? 'on' : ''}" data-id="${e.id}"><span class="box">${on ? ICON.check : ''}</span>
-        <span class="grow" style="min-width:0"><b style="display:block">${esc(e.name)}</b><span class="small muted">${esc(e.ko)} · ${MODES[e.mode].name}${lt}</span></span>
+        <span class="grow" style="min-width:0"><b style="display:block">${esc(exPrimary(e))}</b><span class="small muted">${exSecondary(e) ? esc(exSecondary(e)) + ' · ' : ''}${MODES[e.mode].name}${lt}</span></span>
         ${on && !single ? `<span class="badge">${sel.indexOf(e.id) + 1}</span>` : ''}</button>`;
     }).join('') : `<div class="empty-state">"${esc(q)}" 종목이 없습니다.<br><button class="btn btn-sm" data-a="new" style="margin-top:10px">새 종목으로 만들기</button></div>`;
     if (!single) {
@@ -303,7 +303,7 @@ ACTS.finish = () => {
       <div class="tile"><div class="l">완료 세트</div><div class="v">${st.sets}</div><div class="d">${st.ex}종목</div></div>
       <div class="tile"><div class="l">볼륨</div><div class="v">${st.vol.toLocaleString()}</div><div class="d">kg · 워밍업 제외</div></div>
     </div>
-    ${prs.length ? `<div class="card stack" style="gap:8px;background:var(--s2)"><b>새 개인 기록</b>${prs.map((p) => `<div class="row"><span class="badge pr">PR</span><span class="grow ellipsis">${esc(p.ex.name)}</span><span class="small ink2">${p.kind} <b class="num" style="font-size:18px;color:var(--ink)">${p.val}</b></span></div>`).join('')}</div>` : ''}
+    ${prs.length ? `<div class="card stack" style="gap:8px;background:var(--s2)"><b>새 개인 기록</b>${prs.map((p) => `<div class="row"><span class="badge pr">PR</span><span class="grow ellipsis">${esc(exPrimary(p.ex))}</span><span class="small ink2">${p.kind} <b class="num" style="font-size:18px;color:var(--ink)">${p.val}</b></span></div>`).join('')}</div>` : ''}
     ${undone ? `<div class="stack" style="gap:6px"><div class="small ink2">완료 체크를 안 한 세트가 ${undone}개 있습니다</div>
       <div class="seg" data-g="keep"><button class="on" data-v="drop">저장 안 함</button><button data-v="done">완료로 저장</button></div></div>` : ''}
     <div class="stack" style="gap:6px"><div class="small ink2">컨디션 (1 나쁨 ~ 5 최고)</div>

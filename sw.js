@@ -1,6 +1,6 @@
 // Dryland Log service worker — 오프라인 실행용 캐시
 // 앱 파일을 수정해서 다시 올릴 때는 이 VERSION과 store.js의 APP_VERSION을 같이 올려주세요.
-const VERSION = 'dryland-v5';
+const VERSION = 'dryland-v6';
 const SHELL = [
   './',
   './index.html',

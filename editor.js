@@ -104,7 +104,7 @@ function itemCard(ctx, it, tag) {
   });
   return `<section class="ex" data-item="${it.id}">
     <div class="ex-h">
-      <button class="nm" data-act="exmenu" data-item="${it.id}"><b>${tag ? `<span class="muted">${tag}</span> ` : ''}${esc(ex.name)}</b><span>${esc(ex.ko)} · ${m.name}</span></button>
+      <button class="nm" data-act="exmenu" data-item="${it.id}"><b>${tag ? `<span class="muted">${tag}</span> ` : ''}${esc(exPrimary(ex))}</b><span>${exSecondary(ex) ? esc(exSecondary(ex)) + ' · ' : ''}${m.name}</span></button>
       <button class="more" data-act="exmenu" data-item="${it.id}" aria-label="종목 메뉴">⋯</button>
     </div>
     ${it.note ? `<div class="ex-note">${esc(it.note)}</div>` : ''}
@@ -165,7 +165,7 @@ function renderKeypad() {
     return true;
   }).slice(0, 8);
   const okLabel = ctx.kind === 'routine' ? '다음' : ctx.kind === 'edit' ? '완료 표시' : '세트 완료';
-  el.innerHTML = `<div class="kp-head"><div class="what ellipsis"><b>${esc(ex.name)}</b> · ${setNo} · ${field}<span id="kp-hint">${hint}</span></div>
+  el.innerHTML = `<div class="kp-head"><div class="what ellipsis"><b>${esc(exPrimary(ex))}</b> · ${setNo} · ${field}<span id="kp-hint">${hint}</span></div>
       <button class="close" data-k="close" aria-label="키패드 닫기">${ICON.down}</button></div>
     ${quick.length ? `<div class="chips kp-quick">${quick.map((x) => `<button class="chip" data-q="${x.w ?? ''}|${x.r ?? ''}">${fmtSet(ex, x).replace('kg', '').replace(' × ', '×')}</button>`).join('')}</div>` : ''}
     <div class="kp-grid">

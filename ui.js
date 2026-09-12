@@ -1,6 +1,7 @@
 // 공통 UI: 시트, 뒤로가기 처리, 알림(소리·진동), 화면 켜짐, 차트
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 const ICON = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
@@ -176,17 +177,18 @@ document.addEventListener('visibilitychange', () => {
 function dialSVG(frac, elapsedSec) {
   const R = 20, C = 2 * Math.PI * R;
   const a = ((elapsedSec % 60) / 60) * 2 * Math.PI;
+  const track = cssVar('--s3'), ring = cssVar('--acc'), tick = cssVar('--mute'), hand = cssVar('--clock');
   const ticks = Array.from({ length: 12 }, (_, i) => {
     const t = (i / 12) * 2 * Math.PI, r1 = i % 3 ? 14.5 : 13, r2 = 16.5;
-    return `<line x1="${24 + r1 * Math.sin(t)}" y1="${24 - r1 * Math.cos(t)}" x2="${24 + r2 * Math.sin(t)}" y2="${24 - r2 * Math.cos(t)}" stroke="#6F848E" stroke-width="${i % 3 ? 1 : 1.8}"/>`;
+    return `<line x1="${24 + r1 * Math.sin(t)}" y1="${24 - r1 * Math.cos(t)}" x2="${24 + r2 * Math.sin(t)}" y2="${24 - r2 * Math.cos(t)}" stroke="${tick}" stroke-width="${i % 3 ? 1 : 1.8}"/>`;
   }).join('');
   return `<svg class="dial" viewBox="0 0 48 48" aria-hidden="true">
-    <circle cx="24" cy="24" r="${R}" fill="none" stroke="#243540" stroke-width="3.5"/>
-    <circle cx="24" cy="24" r="${R}" fill="none" stroke="#3BB4E6" stroke-width="3.5" stroke-linecap="round"
+    <circle cx="24" cy="24" r="${R}" fill="none" stroke="${track}" stroke-width="3.5"/>
+    <circle cx="24" cy="24" r="${R}" fill="none" stroke="${ring}" stroke-width="3.5" stroke-linecap="round"
       stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.max(0, Math.min(1, frac)))}" transform="rotate(-90 24 24)"/>
     ${ticks}
-    <line x1="24" y1="24" x2="${24 + 13 * Math.sin(a)}" y2="${24 - 13 * Math.cos(a)}" stroke="#FF5B4F" stroke-width="2.2" stroke-linecap="round"/>
-    <circle cx="24" cy="24" r="2.4" fill="#FF5B4F"/>
+    <line x1="24" y1="24" x2="${24 + 13 * Math.sin(a)}" y2="${24 - 13 * Math.cos(a)}" stroke="${hand}" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="24" cy="24" r="2.4" fill="${hand}"/>
   </svg>`;
 }
 
@@ -214,18 +216,19 @@ function mountChart(box, points, fmtY) {
   const area = `${line}L${pts[pts.length - 1].px.toFixed(1)},${H - B}L${pts[0].px.toFixed(1)},${H - B}Z`;
   const last = pts[pts.length - 1];
   const md = (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  const gridC = cssVar('--line'), mutedC = cssVar('--mute'), lineC = cssVar('--chart'), surfC = cssVar('--s1'), inkC = cssVar('--ink'), ink2C = cssVar('--ink2');
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">
-    ${ticks.map((v) => `<line x1="${L}" x2="${W - Rp + 8}" y1="${Y(v)}" y2="${Y(v)}" stroke="#22313A" stroke-width="1"/>
-      <text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="#6F848E" font-family="Barlow Condensed, sans-serif">${num(v)}</text>`).join('')}
-    <path d="${area}" fill="#2A9BD0" fill-opacity=".1"/>
-    <path d="${line}" fill="none" stroke="#2A9BD0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    ${pts.length <= 40 ? pts.map((p) => `<circle cx="${p.px}" cy="${p.py}" r="4" fill="#2A9BD0" stroke="#131D23" stroke-width="2"/>`).join('') : ''}
-    <circle cx="${last.px}" cy="${last.py}" r="5" fill="#2A9BD0" stroke="#131D23" stroke-width="2"/>
-    <text x="${last.px + 9}" y="${last.py + 5}" font-size="15" font-weight="600" fill="#E6EEF1" font-family="Barlow Condensed, sans-serif">${fmtY(last.y)}</text>
-    <text x="${L}" y="${H - 6}" font-size="11" fill="#6F848E">${md(x0)}</text>
-    ${x1 !== x0 ? `<text x="${W - Rp}" y="${H - 6}" text-anchor="end" font-size="11" fill="#6F848E">${md(x1)}</text>` : ''}
-    <line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="#A9BAC2" stroke-width="1" visibility="hidden"/>
-    <circle class="xd" r="6" fill="#2A9BD0" stroke="#E6EEF1" stroke-width="2" visibility="hidden"/>
+    ${ticks.map((v) => `<line x1="${L}" x2="${W - Rp + 8}" y1="${Y(v)}" y2="${Y(v)}" stroke="${gridC}" stroke-width="1"/>
+      <text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="${mutedC}" font-family="Barlow Condensed, sans-serif">${num(v)}</text>`).join('')}
+    <path d="${area}" fill="${lineC}" fill-opacity=".1"/>
+    <path d="${line}" fill="none" stroke="${lineC}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.length <= 40 ? pts.map((p) => `<circle cx="${p.px}" cy="${p.py}" r="4" fill="${lineC}" stroke="${surfC}" stroke-width="2"/>`).join('') : ''}
+    <circle cx="${last.px}" cy="${last.py}" r="5" fill="${lineC}" stroke="${surfC}" stroke-width="2"/>
+    <text x="${last.px + 9}" y="${last.py + 5}" font-size="15" font-weight="600" fill="${inkC}" font-family="Barlow Condensed, sans-serif">${fmtY(last.y)}</text>
+    <text x="${L}" y="${H - 6}" font-size="11" fill="${mutedC}">${md(x0)}</text>
+    ${x1 !== x0 ? `<text x="${W - Rp}" y="${H - 6}" text-anchor="end" font-size="11" fill="${mutedC}">${md(x1)}</text>` : ''}
+    <line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="${ink2C}" stroke-width="1" visibility="hidden"/>
+    <circle class="xd" r="6" fill="${lineC}" stroke="${inkC}" stroke-width="2" visibility="hidden"/>
     <rect x="0" y="0" width="${W}" height="${H}" fill="transparent" style="touch-action:pan-y"/>
   </svg><div class="tip" hidden></div>`;
   const svg = box.querySelector('svg'), tip = box.querySelector('.tip');

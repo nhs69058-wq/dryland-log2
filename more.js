@@ -82,12 +82,12 @@ ACTS['set-rest'] = () => {
 // ── 종목 ──
 function editExercise(ex, preset, cb) {
   const isNew = !ex;
-  const d = ex ? { ...ex } : { name: (preset && preset.name) || '', ko: '', cat: 'lower', mode: 'kg', rest: S.settings.rest };
+  const d = ex ? { ...ex } : { name: '', ko: (preset && preset.name) || '', cat: 'lower', mode: 'kg', rest: S.settings.rest };
   const used = ex ? S.sessions.some((s) => s.items.some((i) => i.ex === ex.id)) || S.routines.some((r) => r.items.some((i) => i.ex === ex.id))
     || S.trash.some((t) => t.s.items.some((i) => i.ex === ex.id)) : false;
   const sh = openSheet(`<h3>${isNew ? '새 종목' : '종목 설정'}</h3>
-    <label class="f">이름 (영어로 통일)<input name="name" value="${esc(d.name)}" placeholder="예: Nordic Hamstring Curl" autocomplete="off"></label>
-    <label class="f">한글 이름 (검색용)<input name="ko" value="${esc(d.ko)}" placeholder="예: 노르딕 햄스트링 컬" autocomplete="off"></label>
+    <label class="f">종목 이름<input name="ko" value="${esc(d.ko)}" placeholder="예: 노르딕 햄스트링 컬" autocomplete="off"></label>
+    <label class="f">영어 이름 (선택 · 검색용)<input name="name" value="${esc(d.name)}" placeholder="예: Nordic Hamstring Curl" autocomplete="off"></label>
     <div class="stack" style="gap:6px"><div class="small ink2">분류</div>
       <div class="chips" style="flex-wrap:wrap">${Object.entries(CAT).map(([k, v]) => `<button class="chip ${d.cat === k ? 'on' : ''}" data-cat="${k}">${v}</button>`).join('')}</div></div>
     <div class="stack" style="gap:0"><div class="small ink2">기록 방식</div>
@@ -119,8 +119,8 @@ function editExercise(ex, preset, cb) {
     }
     d.name = el.querySelector('[name="name"]').value.trim();
     d.ko = el.querySelector('[name="ko"]').value.trim();
-    if (!d.name) return toast('종목 이름을 입력해 주세요');
-    if (S.exercises.some((x) => x.name.toLowerCase() === d.name.toLowerCase() && x !== ex)) return toast('같은 이름의 종목이 이미 있습니다');
+    if (!d.ko) return toast('종목 이름을 입력해 주세요');
+    if (S.exercises.some((x) => x.ko && x.ko.toLowerCase() === d.ko.toLowerCase() && x !== ex)) return toast('같은 이름의 종목이 이미 있습니다');
     let out = ex;
     if (isNew) { out = { id: 'c-' + uid(), ...d }; S.exercises.push(out); } else Object.assign(ex, d);
     save(); sh.close();
@@ -136,7 +136,7 @@ ACTS.exercises = () => {
     sh.el.querySelector('.list').innerHTML = Object.entries(CAT).map(([c, label]) => {
       const arr = S.exercises.filter((e) => e.cat === c && (!k || (e.name + e.ko).toLowerCase().replace(/\s/g, '').includes(k)));
       return arr.length ? `<div class="small muted" style="margin:14px 0 2px;font-weight:600">${label}</div>${arr.map((e) => `<button class="pick" data-id="${e.id}">
-        <span class="grow" style="min-width:0"><b style="display:block">${esc(e.name)}</b><span class="small muted">${esc(e.ko)} · ${MODES[e.mode].name} · 휴식 ${fmtDur((e.rest || S.settings.rest) * 1000)}</span></span>${ICON.right}</button>`).join('')}` : '';
+        <span class="grow" style="min-width:0"><b style="display:block">${esc(exPrimary(e))}</b><span class="small muted">${exSecondary(e) ? esc(exSecondary(e)) + ' · ' : ''}${MODES[e.mode].name} · 휴식 ${fmtDur((e.rest || S.settings.rest) * 1000)}</span></span>${ICON.right}</button>`).join('')}` : '';
     }).join('') || '<div class="empty-state">찾는 종목이 없습니다</div>';
   };
   sh.el.querySelector('input').addEventListener('input', (e) => { q = e.target.value; draw(); });
@@ -152,7 +152,7 @@ ACTS.exercises = () => {
 ACTS.routines = () => {
   const sh = openSheet(`<h3>루틴 관리</h3>
     <div class="stack">${S.routines.map((r) => `<div class="card stack" style="gap:8px;background:var(--s2)"><b>${esc(r.name)}</b>
-      <div class="small ink2">${r.items.map((it) => exById(it.ex).name).join(', ') || '종목 없음'}</div>
+      <div class="small ink2">${r.items.map((it) => exPrimary(exById(it.ex))).join(', ') || '종목 없음'}</div>
       <div class="row"><button class="btn btn-sm grow" data-edit="${r.id}">편집</button><button class="btn btn-sm btn-primary grow" data-start="${r.id}">시작</button></div></div>`).join('')
       || '<div class="empty-state">루틴이 없습니다</div>'}</div>
     <button class="btn btn-block" data-a="new">+ 새 루틴 만들기</button>
@@ -175,12 +175,12 @@ ACTS.goals = () => {
     sh.el.innerHTML = `<div class="grab"></div><h3>목표</h3>
       <div class="stack" style="gap:6px">${S.goals.map((g) => {
         const ex = exById(g.ex), p = goalProgress(g);
-        return `<div class="row card" style="background:var(--s2)"><div class="grow" style="min-width:0"><b class="ellipsis" style="display:block">${esc(ex.name)}</b>
+        return `<div class="row card" style="background:var(--s2)"><div class="grow" style="min-width:0"><b class="ellipsis" style="display:block">${esc(exPrimary(ex))}</b>
           <span class="small ink2">${fmtW(ex, g.w)}kg × ${g.r}회${g.sets > 1 ? ` × ${g.sets}세트` : ''} · ${p.achieved ? '달성' : `${Math.round(p.pct * 100)}%`}</span></div>
           <button class="btn btn-sm btn-danger" data-del="${g.id}">삭제</button></div>`;
       }).join('') || '<div class="small muted">아직 목표가 없습니다</div>'}</div>
       <div class="card stack" style="background:var(--s2)"><b>새 목표</b>
-        <button class="btn" data-a="pick" style="justify-content:flex-start;background:var(--s3)">${pickEx ? esc(exById(pickEx).name) : '종목 선택'}</button>
+        <button class="btn" data-a="pick" style="justify-content:flex-start;background:var(--s3)">${pickEx ? esc(exPrimary(exById(pickEx))) : '종목 선택'}</button>
         <div class="row"><label class="f grow">무게 (kg)<input name="w" inputmode="decimal" placeholder="145"></label>
           <label class="f grow">횟수<input name="r" inputmode="numeric" value="1"></label>
           <label class="f grow">세트<input name="s" inputmode="numeric" value="1"></label></div>
@@ -280,7 +280,7 @@ ACTS.trash = () => {
       <p class="small ink2" style="margin:0">지운 기록은 ${TRASH_DAYS}일 동안 보관된 뒤 자동으로 완전히 삭제됩니다.</p>
       <div class="stack" style="gap:8px">${S.trash.map((t) => {
         const s = t.s, left = trashDaysLeft(t);
-        const txt = s.type === 'swim' ? swimText(s) : (s.items.map((it) => exById(it.ex).name).join(', ') || s.note || '기록 없음');
+        const txt = s.type === 'swim' ? swimText(s) : (s.items.map((it) => exPrimary(exById(it.ex))).join(', ') || s.note || '기록 없음');
         return `<div class="card stack" style="gap:8px;background:var(--s2)">
           <div class="row"><b>${fmtDate(s.date, true)}</b>${s.type === 'swim' ? '<span class="badge swim">수영</span>' : ''}
             <span class="grow"></span><span class="small" style="color:${left <= 3 ? 'var(--warn)' : 'var(--mute)'}">${left}일 후 삭제</span></div>
