@@ -39,7 +39,6 @@ function renderMore() {
     <section><div class="sec-h"><h2>앱</h2></div><div class="stack" style="gap:6px">
       ${deferredInstall ? '<button class="btn btn-primary btn-block" data-act="install">홈 화면에 앱 설치</button>'
         : '<div class="card small ink2">크롬 메뉴(⋮) → <b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누르면 주소창 없이 앱처럼 열립니다. 이미 설치했다면 그대로 쓰시면 됩니다.</div>'}
-      <button class="btn btn-block btn-danger" data-act="reset">모든 기록 지우고 처음 상태로</button>
       <div class="small muted" style="text-align:center">앱 버전 ${APP_VERSION}</div>
     </div></section>
   </div>`;
@@ -314,9 +313,4 @@ ACTS.install = async () => {
   await deferredInstall.userChoice;
   deferredInstall = null;
   render();
-};
-ACTS.reset = async () => {
-  if (!(await confirmSheet({ title: '모든 기록을 지울까요?', body: '엑셀에서 옮긴 기본 기록만 있는 처음 상태로 돌아갑니다. 먼저 백업 파일을 저장하세요.', ok: '모두 지우기', danger: true }))) return;
-  localStorage.removeItem(KEY);
-  location.reload();
 };
