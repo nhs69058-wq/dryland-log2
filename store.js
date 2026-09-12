@@ -1,6 +1,6 @@
 // 데이터 저장과 계산 (폰의 localStorage에 저장)
 const KEY = 'dryland.v1';   // 저장소 이름 (바꾸면 기록이 안 보이니 그대로 두기)
-const APP_VERSION = 'v4';   // 더보기 화면에 표시 · sw.js의 VERSION과 같이 올리기
+const APP_VERSION = 'v5';   // 더보기 화면에 표시 · sw.js의 VERSION과 같이 올리기
 const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 const CAT = { lower: '하체', pull: '당기기', push: '밀기', power: '파워·점프', core: '코어·어깨' };
 const MODES = {
@@ -33,7 +33,7 @@ function fmtDur(ms) {
 
 function defaults() {
   return {
-    v: 1, exercises: [], sessions: [], routines: [], goals: [], events: [], trash: [],
+    v: 1, exercises: [], sessions: [], routines: [], goals: [], events: [], trash: [], checkins: {},
     settings: { bw: null, rest: 90, sound: true, vibrate: true, awake: true, notify: false, lastBackup: null },
     activeId: null, timer: null,
   };
@@ -46,6 +46,7 @@ function load() {
       S = Object.assign(defaults(), d);
       S.settings = Object.assign(defaults().settings, d.settings);
       if (!Array.isArray(S.trash)) S.trash = [];
+      if (!S.checkins || typeof S.checkins !== 'object') S.checkins = {};
       if (purgeTrash()) save();
       return;
     }
@@ -240,3 +241,11 @@ function restoreSession(id) {
   save();
 }
 const trashDaysLeft = (t) => Math.max(1, Math.ceil((t.at + TRASH_DAYS * 86400000 - Date.now()) / 86400000));
+
+// ── 아침 컨디션 체크인: 날짜별 수면 · 몸 상태 · 의욕 (1~5) ──
+function checkinPoints() {
+  return Object.keys(S.checkins).sort().map((d) => {
+    const c = S.checkins[d];
+    return { date: d, y: Math.round(((c.sleep + c.body + c.mood) / 3) * 10) / 10, tip: `수면 ${c.sleep} · 몸 상태 ${c.body} · 의욕 ${c.mood}` };
+  });
+}

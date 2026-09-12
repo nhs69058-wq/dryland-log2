@@ -46,6 +46,7 @@ function renderHome() {
   const recent = doneSessions().slice(0, 3);
   return `<div class="top"><div class="wordmark">DRYLAND<small>수영을 위한 웨이트 기록</small></div><div class="ink2">${fmtDate(today())}</div></div>
   <div class="page">
+    ${!S.checkins[today()] ? `<button class="banner" data-act="checkin" style="text-align:left;color:var(--ink)"><span class="grow">오늘 컨디션을 기록해보세요 (수면 · 몸 상태 · 의욕)</span><b style="color:var(--acc)">기록</b></button>` : ''}
     ${(bd == null || bd >= 14) && S.sessions.length ? `<div class="banner"><span class="grow">기록은 이 폰에만 저장됩니다. 마지막 백업: ${bd == null ? '없음' : bd + '일 전'}</span><button class="btn btn-sm" data-act="backup">백업</button></div>` : ''}
     <div class="stack">
       <button class="btn btn-primary btn-block" data-act="start-empty" style="min-height:58px;font-size:17px">운동 시작</button>
@@ -122,9 +123,16 @@ function renderHistory() {
     <section><div class="sec-h"><h2>${ui.calSel ? fmtDate(ui.calSel) : `${m}월 기록`}</h2>${ui.calSel ? '<button data-act="cal-all">이 달 전체</button>' : ''}</div>
       <div class="stack">
         ${selEv ? `<div class="card row"><span class="badge" style="background:rgba(255,91,79,.18);color:#FF9A91">대회</span><b>${esc(selEv.name)}</b></div>` : ''}
+        ${ui.calSel ? checkinRow(ui.calSel) : ''}
         ${list.map(sessRow).join('') || `<div class="empty-state">기록이 없습니다${ui.calSel ? `<br><button class="btn btn-sm" data-act="log-past" data-d="${ui.calSel}" style="margin-top:10px">이 날짜에 웨이트 기록 추가</button>` : ''}</div>`}
       </div></section>
   </div>`;
+}
+function checkinRow(d) {
+  const c = S.checkins[d];
+  if (!c) return `<button class="list-btn" data-act="checkin-edit" data-d="${d}"><span class="grow ink2">이 날 컨디션 기록이 없습니다</span><span class="small" style="color:var(--acc)">기록</span></button>`;
+  return `<button class="list-btn" data-act="checkin-edit" data-d="${d}"><span class="badge">컨디션</span>
+    <span class="grow small ink2">수면 ${c.sleep} · 몸 상태 ${c.body} · 의욕 ${c.mood}</span><span class="small" style="color:var(--acc)">수정</span></button>`;
 }
 const shiftMonth = (d) => {
   const [y, m] = (ui.calMonth || today().slice(0, 7)).split('-').map(Number);
@@ -226,7 +234,12 @@ function renderProgress() {
   const usage = exUsage(), ids = Object.keys(usage).sort((a, b) => usage[b] - usage[a]);
   if (!ui.progEx || !S.exercises.some((e) => e.id === ui.progEx)) ui.progEx = ids[0] || null;
   const head = '<div class="top"><h1 style="font-size:22px">분석</h1></div>';
-  if (!ui.progEx) return `${head}<div class="page"><div class="empty-state">운동을 기록하면 종목별 성장 그래프가 생깁니다</div></div>`;
+  const condSection = `<section><div class="sec-h"><h2>컨디션 흐름</h2></div><div class="chart" id="cond-chart"></div></section>`;
+  const condPts = checkinPoints();
+  if (!ui.progEx) {
+    postRender = () => mountChart($('#cond-chart'), condPts, (v) => num(v));
+    return `${head}<div class="page">${condSection}<div class="empty-state">운동을 기록하면 종목별 성장 그래프가 생깁니다</div></div>`;
+  }
   const ex = exById(ui.progEx), hist = exHistory(ex.id), w = hasW(ex);
   const metrics = w ? [['e1rm', '추정 1RM'], ['max', '최고 무게'], ['vol', '볼륨']] : [['reps', '최다 횟수'], ['total', '총 횟수']];
   if (!metrics.some(([k]) => k === ui.progMetric)) ui.progMetric = metrics[0][0];
@@ -247,13 +260,13 @@ function renderProgress() {
     if (val != null) points.push({ date: h.date, y: Math.round(val * 10) / 10, tip: sets.map((x) => fmtSet(ex, x)).join(' · ') });
   }
   const fmtY = (v) => (M === 'vol' || M === 'total' ? Math.round(v).toLocaleString() + (M === 'vol' ? 'kg' : unitR) : M === 'reps' ? num(v) + unitR : fmtW(ex, v) + 'kg');
-  postRender = () => mountChart($('#chart'), points, fmtY);
+  postRender = () => { mountChart($('#chart'), points, fmtY); mountChart($('#cond-chart'), condPts, (v) => num(v)); };
   const chips = ids.slice(0, 8).map((id) => `<button class="chip ${id === ex.id ? 'on' : ''}" data-act="prog-ex" data-id="${id}">${esc(exById(id).name)}</button>`).join('');
   const tile = (l, b, fmt) => `<div class="tile"><div class="l">${l}</div><div class="v">${b ? fmt(b.v) : '—'}</div><div class="d">${b ? fmtDate(b.d) : ''}</div></div>`;
   const tiles = w
     ? tile('최고 무게', bestW, (v) => fmtW(ex, v)) + tile('추정 1RM', bestE, (v) => fmtW(ex, Math.round(v * 10) / 10)) + `<div class="tile"><div class="l">기록한 날</div><div class="v">${hist.length}</div><div class="d">회</div></div>`
     : tile(`최다 ${unitR === '초' ? '시간' : '횟수'}`, bestR, num) + `<div class="tile"><div class="l">기록한 날</div><div class="v">${hist.length}</div><div class="d">회</div></div><div class="tile"><div class="l">마지막</div><div class="v" style="font-size:20px">${hist.length ? fmtDate(hist[hist.length - 1].date) : '—'}</div></div>`;
-  return `${head}<div class="page">
+  return `${head}<div class="page">${condSection}
     <div class="stack" style="gap:8px"><div class="chips">${chips}</div>
       <button class="btn btn-block" data-act="prog-pick" style="justify-content:space-between"><span class="ellipsis"><b>${esc(ex.name)}</b> <span class="small muted">${esc(ex.ko)}</span></span>${ICON.down}</button></div>
     ${ex.mode === 'added' && !S.settings.bw ? '<button class="banner" data-act="set-bw" style="text-align:left;color:var(--ink)"><span class="grow">몸무게를 입력하면 추가 중량 종목의 추정 1RM을 몸무게까지 포함해 계산합니다</span><b>입력</b></button>' : ''}
@@ -270,3 +283,35 @@ function renderProgress() {
 ACTS['prog-ex'] = (b) => { ui.progEx = b.dataset.id; render(); };
 ACTS['prog-metric'] = (b) => { ui.progMetric = b.dataset.m; render(); };
 ACTS['prog-pick'] = () => pickExercises((ids) => { if (ids[0]) { ui.progEx = ids[0]; render(); } }, true);
+
+// ── 아침 컨디션 체크인 ──
+function checkinSheet(d) {
+  const cur = S.checkins[d] || {};
+  const FIELDS = [['sleep', '수면'], ['body', '몸 상태'], ['mood', '의욕']];
+  const L = ['', '나쁨', '별로', '보통', '좋음', '최고'];
+  const val = { sleep: cur.sleep || 0, body: cur.body || 0, mood: cur.mood || 0 };
+  const seg = (key) => `<div class="seg" data-k="${key}">${[1, 2, 3, 4, 5].map((n) => `<button class="${val[key] === n ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}</div>`;
+  const sh = openSheet(`<h3>${fmtDate(d, true)} 컨디션</h3>
+    ${FIELDS.map(([k, label]) => `<div class="stack" style="gap:6px"><div class="small ink2">${label}${val[k] ? ' · ' + L[val[k]] : ''}</div>${seg(k)}</div>`).join('')}
+    <div class="row">${S.checkins[d] ? '<button class="btn grow btn-danger" data-a="del">삭제</button>' : '<button class="btn grow" data-a="x">취소</button>'}
+      <button class="btn btn-primary grow" data-a="ok">저장</button></div>`);
+  sh.el.addEventListener('click', (e) => {
+    const nb = e.target.closest('.seg [data-n]');
+    if (nb) {
+      const key = nb.closest('.seg').dataset.k;
+      val[key] = +nb.dataset.n;
+      $$(`.seg[data-k="${key}"] button`, sh.el).forEach((b) => b.classList.toggle('on', +b.dataset.n === val[key]));
+      nb.closest('.stack').querySelector('.small.ink2').textContent = `${FIELDS.find((f) => f[0] === key)[1]} · ${L[val[key]]}`;
+      return;
+    }
+    const a = e.target.closest('[data-a]');
+    if (!a) return;
+    if (a.dataset.a === 'x') return sh.close();
+    if (a.dataset.a === 'del') { delete S.checkins[d]; save(); sh.close(); render(); toast('컨디션 기록을 지웠습니다'); return; }
+    if (!val.sleep || !val.body || !val.mood) return toast('세 가지를 모두 선택해 주세요');
+    S.checkins[d] = { ...val };
+    save(); sh.close(); render(); toast('오늘 컨디션을 기록했습니다');
+  });
+}
+ACTS.checkin = () => checkinSheet(today());
+ACTS['checkin-edit'] = (b) => checkinSheet(b.dataset.d);
